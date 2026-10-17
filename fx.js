@@ -54,12 +54,11 @@
       hold.burst = setInterval(function(){
         if (!hold) return;
         var age = (performance.now() - hold.start) / 1000;   // 秒
-        var radius = Math.min(38 + age * 64, 180);            // 逐渐扩大，封顶 180px
+        var reach = Math.min(14 + age * 34, 82);             // 飞散距离，逐渐扩大，封顶 82px
         var n = 4 + Math.floor(Math.random() * 3);
         for (var i = 0; i < n; i++) {
           var a = Math.random() * Math.PI * 2;
-          var r = radius * (0.55 + Math.random() * 0.55);
-          spark(hold.x + Math.cos(a) * r, hold.y + Math.sin(a) * r, 18, 2 + Math.random() * 3, '.72s');
+          spark(hold.x + Math.cos(a) * 3, hold.y + Math.sin(a) * 3, reach, 2 + Math.random() * 2.4, '.72s');
         }
       }, 110);
     }, 330);
