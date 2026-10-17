@@ -5,6 +5,25 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <meta name="theme-color" content="#0b1020">
 <title>Deepseek酱生成</title>
+
+<!-- 分享卡片 -->
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="Deepseek酱生成">
+<meta property="og:title" content="Deepseek酱生成">
+<meta property="og:description" content="一个用 AI 做的小画廊 · 鬼针草 9 张 + Deepseek酱 5 张">
+<meta property="og:image" content="https://hoshino886.github.io/poster/og.jpg">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta property="og:url" content="https://hoshino886.github.io/poster/">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="Deepseek酱生成">
+<meta name="twitter:description" content="一个用 AI 做的小画廊">
+<meta name="twitter:image" content="https://hoshino886.github.io/poster/og.jpg">
+
+<!-- 图标 -->
+<link rel="icon" href="favicon.svg" type="image/svg+xml">
+<link rel="apple-touch-icon" href="favicon.svg">
+
 <style>
   *{margin:0;padding:0;box-sizing:border-box}
   html,body{height:100%;background:#05070f}
@@ -23,12 +42,14 @@
     background:#05070f;
   }
 
-  .cover img{
+  .cover .pic{
     position:absolute;inset:0;
     width:100%;height:100%;
     object-fit:cover;
     object-position:center 18%;
     animation:zoom 22s ease-in-out infinite alternate;
+    -webkit-touch-callout:default;
+    cursor:pointer;
   }
   @keyframes zoom{
     from{transform:scale(1)}
@@ -36,7 +57,7 @@
   }
 
   .shade{
-    position:absolute;inset:0;z-index:1;
+    position:absolute;inset:0;z-index:1;pointer-events:none;
     background:
       linear-gradient(180deg, rgba(5,7,15,.45) 0%, transparent 26%),
       linear-gradient(0deg, rgba(5,7,15,.94) 0%, rgba(5,7,15,.72) 22%, transparent 58%);
@@ -105,11 +126,37 @@
     margin-top:5.4cqw;font-size:2.1cqw;letter-spacing:.26em;
     color:rgba(160,185,220,.5);
   }
+
+  /* 彩蛋 */
+  .egg{position:fixed;inset:0;z-index:99;pointer-events:none;overflow:hidden}
+  .egg i{
+    position:absolute;bottom:-60px;border-radius:50%;
+    background:radial-gradient(circle at 32% 28%, rgba(255,255,255,.95), rgba(150,205,255,.35) 58%, rgba(150,205,255,.06));
+    border:1px solid rgba(205,232,255,.55);
+    animation:rise 3.6s ease-in forwards;
+  }
+  @keyframes rise{
+    0%{transform:translateY(0) scale(.7);opacity:0}
+    12%{opacity:.9}
+    100%{transform:translateY(-115vh) scale(1.1);opacity:0}
+  }
+  .egg-msg{
+    position:absolute;left:0;right:0;bottom:34%;text-align:center;
+    font-size:6.4vw;font-weight:800;letter-spacing:.06em;
+    color:#e2f4ff;text-shadow:0 0 5vw rgba(90,180,255,.95);
+    animation:eggFade 3.6s ease forwards;
+  }
+  @keyframes eggFade{
+    0%{opacity:0;transform:translateY(3vw) scale(.96)}
+    18%{opacity:1;transform:translateY(0) scale(1)}
+    75%{opacity:1}
+    100%{opacity:0;transform:translateY(-2vw) scale(1.02)}
+  }
 </style>
 </head>
 <body>
   <main class="cover">
-    <img src="cover.jpg" alt="封面">
+    <img class="pic" src="cover.jpg" alt="封面">
     <div class="shade"></div>
 
     <div class="top">
@@ -128,5 +175,44 @@
       <p class="foot">HOSHINO886 · 2026</p>
     </div>
   </main>
+
+<script>
+(function(){
+  const pic = document.querySelector('.pic');
+  let taps = 0, timer = null;
+
+  pic.addEventListener('click', function(){
+    taps++;
+    clearTimeout(timer);
+    timer = setTimeout(function(){ taps = 0; }, 1400);
+    if (taps >= 5) { taps = 0; egg(); }
+  });
+
+  function egg(){
+    if (document.querySelector('.egg')) return;
+    const layer = document.createElement('div');
+    layer.className = 'egg';
+
+    for (let i = 0; i < 18; i++) {
+      const b = document.createElement('i');
+      const size = 8 + Math.random() * 26;
+      b.style.width = size + 'px';
+      b.style.height = size + 'px';
+      b.style.left = (Math.random() * 100) + '%';
+      b.style.animationDelay = (Math.random() * 1.4) + 's';
+      b.style.animationDuration = (2.8 + Math.random() * 1.6) + 's';
+      layer.appendChild(b);
+    }
+
+    const msg = document.createElement('div');
+    msg.className = 'egg-msg';
+    msg.textContent = '咕噜咕噜 🐳';
+    layer.appendChild(msg);
+
+    document.body.appendChild(layer);
+    setTimeout(function(){ layer.remove(); }, 5600);
+  }
+})();
+</script>
 </body>
 </html>
