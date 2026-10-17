@@ -1,0 +1,60 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="theme-color" content="#0a0a12">
+<title>DSH · 海报</title>
+<style>
+  *{margin:0;padding:0;box-sizing:border-box}
+  body{
+    min-height:100vh;background:#0a0a12;color:#eef1ff;
+    font-family:"PingFang SC","Noto Sans SC",system-ui,sans-serif;
+    display:flex;flex-direction:column;justify-content:center;
+    gap:18px;padding:32px 24px;
+    background-image:radial-gradient(70% 40% at 50% 0%, rgba(92,140,255,.16), transparent 70%);
+  }
+  header{font-size:12px;letter-spacing:.32em;color:#7c86b8;text-transform:uppercase;margin-bottom:4px}
+  h1{font-size:30px;line-height:1.2;letter-spacing:.02em}
+  p.sub{font-size:14px;color:#8b93bd;margin-top:-8px;line-height:1.7}
+  a.card{
+    display:flex;align-items:center;gap:16px;
+    padding:22px 20px;border-radius:18px;text-decoration:none;color:inherit;
+    background:rgba(255,255,255,.045);
+    border:1px solid rgba(255,255,255,.09);
+    transition:transform .18s ease, background .18s ease;
+  }
+  a.card:active{transform:scale(.98);background:rgba(255,255,255,.08)}
+  .n{font-size:13px;color:#6f79a8;font-variant-numeric:tabular-nums}
+  .t{font-size:19px;font-weight:700}
+  .d{font-size:13px;color:#8b93bd;margin-top:3px}
+  .arrow{margin-left:auto;color:#5b6494;font-size:20px}
+  footer{margin-top:12px;font-size:12px;color:#565f8a;line-height:1.8}
+</style>
+</head>
+<body>
+  <header>DeepSeek Harness · Local</header>
+  <h1>三张海报</h1>
+  <p class="sub">点开任意一张，返回键回到这里。</p>
+
+  <a class="card" href="%E6%B5%B7%E6%8A%A5.html">
+    <span class="n">01</span>
+    <span><span class="t">霓虹夜跑</span><span class="d">城市夜跑 · 霓虹渐变</span></span>
+    <span class="arrow">→</span>
+  </a>
+
+  <a class="card" href="%E6%88%91%E7%9A%84%E6%B5%B7%E6%8A%A5.html">
+    <span class="n">02</span>
+    <span><span class="t">DSH 终端</span><span class="d">荧光绿 · 极简终端风</span></span>
+    <span class="arrow">→</span>
+  </a>
+
+  <a class="card" href="%E8%93%9D%E8%89%B2%E5%A4%A7%E8%82%A5%E9%B1%BC.html">
+    <span class="n">03</span>
+    <span><span class="t">蓝色大肥鱼</span><span class="d">手绘 SVG · 会游会冒泡</span></span>
+    <span class="arrow">→</span>
+  </a>
+
+  <footer>本页由本地静态服务提供，仅 127.0.0.1 可访问。</footer>
+</body>
+</html>
