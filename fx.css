@@ -1,3 +1,8 @@
+/* 关掉移动端默认的点击高亮方块 */
+html, body, a, button, figure, img, span, div{
+  -webkit-tap-highlight-color: transparent;
+}
+
 /* 点击星芒 & 滑动星点 */
 .fx-star{
   position:fixed;z-index:9999;
