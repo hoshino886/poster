@@ -1,0 +1,88 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#0b0d14">
+<title>选择分类 · Deepseek酱生成</title>
+<style>
+  *{margin:0;padding:0;box-sizing:border-box}
+  html,body{min-height:100%}
+  body{
+    min-height:100vh;
+    background:#0b0d14;color:#e8ecf5;
+    font-family:"PingFang SC","Noto Sans SC",system-ui,sans-serif;
+    display:flex;flex-direction:column;justify-content:center;
+    padding:14vw 5vw 12vw;
+    background-image:radial-gradient(90% 45% at 50% 0%, rgba(90,140,255,.18), transparent 70%);
+    background-repeat:no-repeat;
+  }
+
+  header{text-align:center;margin-bottom:11vw}
+  .dotline{
+    display:inline-flex;align-items:center;gap:2.2vw;
+    font-size:3vw;letter-spacing:.32em;color:#6f7ea8;text-transform:uppercase;
+    margin-bottom:5vw;
+  }
+  .dot{width:2vw;height:2vw;border-radius:50%;background:#6fd6ff;box-shadow:0 0 6vw rgba(111,214,255,.9);animation:pulse 2.2s infinite}
+  @keyframes pulse{50%{opacity:.3}}
+  h1{font-size:9vw;font-weight:800;letter-spacing:.02em}
+  h1 .hl{background:linear-gradient(180deg,#cdeeff,#63bbff 60%,#3d8ef0);-webkit-background-clip:text;background-clip:text;color:transparent}
+  .sub{margin-top:3.4vw;font-size:3.2vw;letter-spacing:.3em;color:#77839f;text-transform:uppercase}
+
+  .cats{display:grid;grid-template-columns:1fr 1fr;gap:4.4vw}
+  .cat{
+    position:relative;display:block;text-decoration:none;color:inherit;
+    aspect-ratio:3/4.1;border-radius:5vw;overflow:hidden;
+    background:#151b28;
+    box-shadow:0 1.2vw 6vw rgba(0,0,0,.5);
+    transition:transform .18s ease;
+  }
+  .cat:active{transform:scale(.97)}
+  .cat img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;opacity:.92}
+  .cat .mask{position:absolute;inset:0;background:linear-gradient(0deg,rgba(4,6,12,.94) 4%,rgba(4,6,12,.35) 46%,transparent 72%)}
+  .cat .txt{position:absolute;left:0;right:0;bottom:0;padding:0 4.4vw 5vw}
+  .cat .nm{font-size:4.8vw;font-weight:800;letter-spacing:.02em;text-shadow:0 .5vw 3vw rgba(0,0,0,.8)}
+  .cat .num{margin-top:1.4vw;font-size:2.9vw;letter-spacing:.2em;color:#9fb0d0}
+  .cat .tag{
+    position:absolute;top:3.4vw;left:3.4vw;
+    font-size:2.6vw;letter-spacing:.2em;color:#cfe4ff;
+    background:rgba(10,16,30,.55);border:1px solid rgba(160,200,255,.25);
+    padding:1.2vw 3vw;border-radius:99px;backdrop-filter:blur(6px);
+  }
+
+  footer{margin-top:12vw;text-align:center;font-size:2.9vw;letter-spacing:.26em;color:#4f5872}
+</style>
+</head>
+<body>
+  <header>
+    <div class="dotline"><span class="dot"></span><span>Deepseek酱生成</span></div>
+    <h1>选择<span class="hl">分类</span></h1>
+    <p class="sub">Pick a collection</p>
+  </header>
+
+  <div class="cats">
+    <a class="cat" href="gallery.html">
+      <img src="gallery/01.webp" alt="鬼针草">
+      <div class="mask"></div>
+      <span class="tag">9 PICS</span>
+      <div class="txt">
+        <div class="nm">鬼针草</div>
+        <div class="num">9 张</div>
+      </div>
+    </a>
+
+    <a class="cat" href="deepseek.html">
+      <img src="deepseek/01.webp" alt="Deepseek酱">
+      <div class="mask"></div>
+      <span class="tag">5 PICS</span>
+      <div class="txt">
+        <div class="nm">Deepseek酱</div>
+        <div class="num">5 张</div>
+      </div>
+    </a>
+  </div>
+
+  <footer>HOSHINO886 · 2026</footer>
+</body>
+</html>
