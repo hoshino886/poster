@@ -56,7 +56,7 @@
       if (!hold) return;
       var age = (now() - hold.start) / 1000;
       if (age > 2.6) { stopHold(); return; }
-      var reach = Math.min(14 + age * 34, 82);
+      var reach = Math.min(18 + age * 46, 112);
       var n = 4 + Math.floor(Math.random() * 3);
       for (var i = 0; i < n; i++) {
         var a = Math.random() * Math.PI * 2;
