@@ -19,20 +19,6 @@
     setTimeout(function(){ if (s.parentNode) s.parentNode.removeChild(s); }, 700);
   }
 
-  function line(x1, y1, x2, y2){
-    var dx = x2 - x1, dy = y2 - y1;
-    var len = Math.sqrt(dx * dx + dy * dy);
-    if (len < 1.5) return;
-    var d = document.createElement('i');
-    d.className = 'fx-line';
-    d.style.left = x1 + 'px';
-    d.style.top = y1 + 'px';
-    d.style.width = len + 'px';
-    d.style.transform = 'rotate(' + Math.atan2(dy, dx) + 'rad)';
-    document.body.appendChild(d);
-    setTimeout(function(){ if (d.parentNode) d.parentNode.removeChild(d); }, 500);
-  }
-
   // 点击：星芒 + 飞散星点
   document.addEventListener('pointerdown', function(e){
     var x = e.clientX, y = e.clientY;
@@ -48,29 +34,84 @@
     for (var i = 0; i < n; i++) spark(x, y, 26, 3 + Math.random() * 2, null);
   }, {passive:true});
 
-  // 滑动：白色光带 + 星点
-  var prev = null, lastSpark = 0, lastLine = 0;
+  // ================= 滑动光带（canvas） =================
+  var canvas = document.createElement('canvas');
+  canvas.className = 'fx-canvas';
+  document.body.appendChild(canvas);
+  var ctx = canvas.getContext('2d');
 
-  document.addEventListener('touchstart', function(){ prev = null; }, {passive:true});
+  var dpr = Math.min(window.devicePixelRatio || 1, 2.5);
+  var W = 0, H = 0;
+
+  function resize(){
+    W = window.innerWidth;
+    H = window.innerHeight;
+    canvas.width = Math.round(W * dpr);
+    canvas.height = Math.round(H * dpr);
+    ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+  }
+  resize();
+  window.addEventListener('resize', resize);
+
+  var LIFE = 420;
+  var pts = [];
+  var running = false;
+
+  function tick(){
+    ctx.clearRect(0, 0, W, H);
+    var now = performance.now();
+
+    // 丢掉过期的点
+    while (pts.length && now - pts[0].t > LIFE) pts.shift();
+
+    ctx.lineCap = 'round';
+    ctx.lineJoin = 'round';
+
+    for (var i = 1; i < pts.length; i++) {
+      var p0 = pts[i - 1], p1 = pts[i];
+      var age = now - p1.t;
+      if (age > LIFE) continue;
+      var a = 1 - age / LIFE;          // 1 -> 0
+      var alpha = a * a;               // 收尾更快，不留黑边
+
+      ctx.beginPath();
+      ctx.moveTo(p0.x, p0.y);
+      ctx.lineTo(p1.x, p1.y);
+
+      ctx.strokeStyle = 'rgba(255,255,255,' + (alpha * 0.95).toFixed(3) + ')';
+      ctx.lineWidth = 0.8 + 2.6 * a;
+      ctx.shadowColor = 'rgba(175,225,255,' + (alpha * 0.9).toFixed(3) + ')';
+      ctx.shadowBlur = 12 * a;
+      ctx.stroke();
+    }
+    ctx.shadowBlur = 0;
+
+    if (pts.length) {
+      requestAnimationFrame(tick);
+    } else {
+      running = false;
+    }
+  }
+
+  document.addEventListener('touchstart', function(){ pts = []; }, {passive:true});
 
   document.addEventListener('touchmove', function(e){
-    if (e.touches.length !== 1) { prev = null; return; }
+    if (e.touches.length !== 1) return;
     var t = e.touches[0];
-    var x = t.clientX, y = t.clientY;
-    var now = Date.now();
+    var now = performance.now();
+    var last = pts[pts.length - 1];
 
-    if (prev && now - lastLine > 22) {
-      lastLine = now;
-      line(prev.x, prev.y, x, y);
-    }
-    prev = {x: x, y: y};
+    // 采样过滤：移动太小时不记，避免自造“一串点”
+    if (last && Math.abs(t.clientX - last.x) < 1.2 && Math.abs(t.clientY - last.y) < 1.2) return;
 
-    if (now - lastSpark > 60) {
-      lastSpark = now;
-      spark(x + (Math.random() * 12 - 6), y + (Math.random() * 12 - 6), 10, 2.5 + Math.random() * 2.5, '.5s');
-    }
+    pts.push({x: t.clientX, y: t.clientY, t: now});
+    if (pts.length > 80) pts.shift();
+
+    if (!running) { running = true; requestAnimationFrame(tick); }
   }, {passive:true});
 
-  document.addEventListener('touchend', function(){ prev = null; }, {passive:true});
-  document.addEventListener('touchcancel', function(){ prev = null; }, {passive:true});
+  document.addEventListener('touchend', function(){
+    // 不立即清空，让尾巴自己淡出
+  }, {passive:true});
+  document.addEventListener('touchcancel', function(){ pts = []; }, {passive:true});
 })();
