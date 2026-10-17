@@ -1,6 +1,22 @@
 /* 彻底禁用移动端点击高亮 */
 *{ -webkit-tap-highlight-color: transparent !important; }
 
+/* 禁止长按选中文字；但图片仍允许长按保存 */
+*{
+  -webkit-user-select: none;
+     -moz-user-select: none;
+          user-select: none;
+}
+img{
+  -webkit-user-select: auto;
+          user-select: auto;
+  -webkit-touch-callout: default;
+}
+input, textarea{
+  -webkit-user-select: text;
+          user-select: text;
+}
+
 /* 点击星芒 */
 .fx-star{
   position:fixed;z-index:9999;
