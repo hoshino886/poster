@@ -214,4 +214,99 @@
 
   window.addEventListener('scroll', function(){ pts = []; }, {passive:true});
   document.addEventListener('touchcancel', function(){ pts = []; }, {passive:true});
+
+
+  // ============ 背景音乐（Web Audio 实时合成，零文件） ============
+  (function(){
+    var AC = window.AudioContext || window.webkitAudioContext;
+    if (!AC) return;
+
+    var actx = null, master = null, timer = null, playing = false, step = 0;
+
+    var CHORDS = [
+      [174.61, 220.00, 261.63, 349.23],
+      [130.81, 196.00, 261.63, 329.63],
+      [220.00, 261.63, 329.63, 440.00],
+      [196.00, 246.94, 293.66, 392.00]
+    ];
+
+    var btn = document.createElement("button");
+    btn.type = "button";
+    btn.className = "fx-music";
+    btn.setAttribute("aria-label", "背景音乐");
+    btn.textContent = "♪";
+    document.body.appendChild(btn);
+
+    function playChord(freqs, t0, dur){
+      freqs.forEach(function(f, i){
+        var o = actx.createOscillator();
+        var g = actx.createGain();
+        var lp = actx.createBiquadFilter();
+        o.type = i === 0 ? "sine" : "triangle";
+        o.frequency.value = f;
+        lp.type = "lowpass";
+        lp.frequency.value = 880;
+        g.gain.setValueAtTime(0.0001, t0);
+        g.gain.linearRampToValueAtTime(0.055 / freqs.length, t0 + 1.1);
+        g.gain.linearRampToValueAtTime(0.0001, t0 + dur);
+        o.connect(lp); lp.connect(g); g.connect(master);
+        o.start(t0); o.stop(t0 + dur + 0.1);
+      });
+      // 一颗高音星光点缀
+      if (Math.random() < 0.6) {
+        var s = actx.createOscillator(), sg = actx.createGain();
+        s.type = "sine";
+        s.frequency.value = 880 * (Math.random() < 0.5 ? 1 : 1.5);
+        sg.gain.setValueAtTime(0.0001, t0 + dur * 0.5);
+        sg.gain.linearRampToValueAtTime(0.02, t0 + dur * 0.55);
+        sg.gain.linearRampToValueAtTime(0.0001, t0 + dur * 0.95);
+        s.connect(sg); sg.connect(master);
+        s.start(t0 + dur * 0.5); s.stop(t0 + dur);
+      }
+    }
+
+    function tick(){
+      if (!playing) return;
+      var t = actx.currentTime + 0.06;
+      playChord(CHORDS[step % CHORDS.length], t, 4.6);
+      step++;
+      timer = setTimeout(tick, 4000);
+    }
+
+    function start(){
+      if (!actx) {
+        actx = new AC();
+        master = actx.createGain();
+        master.gain.value = 0;
+        master.connect(actx.destination);
+      }
+      if (actx.state === "suspended") actx.resume();
+      playing = true;
+      var t = actx.currentTime;
+      master.gain.cancelScheduledValues(t);
+      master.gain.setValueAtTime(master.gain.value, t);
+      master.gain.linearRampToValueAtTime(1, t + 2);
+      btn.classList.add("on");
+      btn.textContent = "♫";
+      tick();
+    }
+
+    function stop(){
+      playing = false;
+      clearTimeout(timer);
+      if (master) {
+        var t = actx.currentTime;
+        master.gain.cancelScheduledValues(t);
+        master.gain.setValueAtTime(master.gain.value, t);
+        master.gain.linearRampToValueAtTime(0, t + 0.8);
+      }
+      btn.classList.remove("on");
+      btn.textContent = "♪";
+    }
+
+    btn.addEventListener("click", function(e){
+      e.stopPropagation();
+      if (playing) stop(); else start();
+    });
+  })();
 })();
