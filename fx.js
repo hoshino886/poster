@@ -56,11 +56,11 @@
       if (!hold) return;
       var age = (now() - hold.start) / 1000;
       if (age > 2.6) { stopHold(); return; }
-      var reach = Math.min(18 + age * 46, 112);
+      var reach = Math.min(28 + age * 72, 175);
       var n = 4 + Math.floor(Math.random() * 3);
       for (var i = 0; i < n; i++) {
         var a = Math.random() * Math.PI * 2;
-        spark(hold.x + Math.cos(a) * 3, hold.y + Math.sin(a) * 3, reach, 2 + Math.random() * 2.4, '.72s');
+        spark(hold.x + Math.cos(a) * 10, hold.y + Math.sin(a) * 10, reach, 2 + Math.random() * 2.4, '.72s');
       }
     }, 110);
   }
