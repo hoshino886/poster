@@ -34,7 +34,7 @@
     for (var i = 0; i < n; i++) spark(x, y, 26, 3 + Math.random() * 2, null);
   }, {passive:true});
 
-  // ================= 滑动光带（canvas） =================
+  // ================= 滑动光带（canvas 曲线） =================
   var canvas = document.createElement('canvas');
   canvas.className = 'fx-canvas';
   document.body.appendChild(canvas);
@@ -53,44 +53,46 @@
   resize();
   window.addEventListener('resize', resize);
 
-  var LIFE = 420;
+  var LIFE = 460;
   var pts = [];
   var running = false;
 
   function tick(){
     ctx.clearRect(0, 0, W, H);
     var now = performance.now();
-
-    // 丢掉过期的点
     while (pts.length && now - pts[0].t > LIFE) pts.shift();
 
     ctx.lineCap = 'round';
     ctx.lineJoin = 'round';
 
     for (var i = 1; i < pts.length; i++) {
-      var p0 = pts[i - 1], p1 = pts[i];
+      var p0 = pts[i - 1];
+      var p1 = pts[i];
+      var pm = pts[i - 2] || p0;
       var age = now - p1.t;
       if (age > LIFE) continue;
-      var a = 1 - age / LIFE;          // 1 -> 0
-      var alpha = a * a;               // 收尾更快，不留黑边
+
+      var a = Math.pow(1 - age / LIFE, 1.35);
+      var alpha = a * 0.95;
+
+      // 中点平滑：用 p0 作控制点，画到相邻中点，接缝自然
+      var qx = (pm.x + p0.x) / 2, qy = (pm.y + p0.y) / 2;
+      var mx = (p0.x + p1.x) / 2, my = (p0.y + p1.y) / 2;
 
       ctx.beginPath();
-      ctx.moveTo(p0.x, p0.y);
-      ctx.lineTo(p1.x, p1.y);
+      ctx.moveTo(qx, qy);
+      ctx.quadraticCurveTo(p0.x, p0.y, mx, my);
 
-      ctx.strokeStyle = 'rgba(255,255,255,' + (alpha * 0.95).toFixed(3) + ')';
-      ctx.lineWidth = 0.8 + 2.6 * a;
-      ctx.shadowColor = 'rgba(175,225,255,' + (alpha * 0.9).toFixed(3) + ')';
-      ctx.shadowBlur = 12 * a;
+      ctx.strokeStyle = 'rgba(255,255,255,' + alpha.toFixed(3) + ')';
+      ctx.lineWidth = 1.1 + 2.6 * a;
+      ctx.shadowColor = 'rgba(185,228,255,' + (alpha * 0.85).toFixed(3) + ')';
+      ctx.shadowBlur = 14 * a;
       ctx.stroke();
     }
     ctx.shadowBlur = 0;
 
-    if (pts.length) {
-      requestAnimationFrame(tick);
-    } else {
-      running = false;
-    }
+    if (pts.length) requestAnimationFrame(tick);
+    else running = false;
   }
 
   document.addEventListener('touchstart', function(){ pts = []; }, {passive:true});
@@ -101,17 +103,32 @@
     var now = performance.now();
     var last = pts[pts.length - 1];
 
-    // 采样过滤：移动太小时不记，避免自造“一串点”
-    if (last && Math.abs(t.clientX - last.x) < 1.2 && Math.abs(t.clientY - last.y) < 1.2) return;
+    if (last) {
+      var dx = t.clientX - last.x;
+      var dy = t.clientY - last.y;
+      var d = Math.sqrt(dx * dx + dy * dy);
+      if (d < 1.2) return;
+
+      // 快速滑动时补插值点，避免变成折线/断点
+      if (d > 9) {
+        var steps = Math.min(8, Math.floor(d / 9));
+        for (var k = 1; k <= steps; k++) {
+          var f = k / (steps + 1);
+          pts.push({
+            x: last.x + dx * f,
+            y: last.y + dy * f,
+            t: now - (1 - f) * 14
+          });
+        }
+      }
+    }
 
     pts.push({x: t.clientX, y: t.clientY, t: now});
-    if (pts.length > 80) pts.shift();
+    if (pts.length > 160) pts.shift();
 
     if (!running) { running = true; requestAnimationFrame(tick); }
   }, {passive:true});
 
-  document.addEventListener('touchend', function(){
-    // 不立即清空，让尾巴自己淡出
-  }, {passive:true});
+  document.addEventListener('touchend', function(){}, {passive:true});
   document.addEventListener('touchcancel', function(){ pts = []; }, {passive:true});
 })();
