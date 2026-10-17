@@ -14,6 +14,7 @@
     background-image:radial-gradient(80% 40% at 50% -5%, rgba(90,140,255,.16), transparent 70%);
     background-repeat:no-repeat;
   }
+  body.locked{overflow:hidden}
 
   .back{
     display:inline-flex;align-items:center;gap:2vw;
@@ -41,6 +42,7 @@
   figure{
     break-inside:avoid;margin:0 0 3.4vw;border-radius:3vw;overflow:hidden;
     background:#151b28;box-shadow:0 .8vw 4vw rgba(0,0,0,.45);position:relative;
+    cursor:zoom-in;
   }
   figure img{display:block;width:100%;height:auto}
   figure::after{
@@ -52,19 +54,31 @@
   footer{margin-top:10vw;text-align:center;font-size:2.9vw;letter-spacing:.26em;color:#4f5872}
 
   /* 灯箱 */
-  #lb{position:fixed;inset:0;z-index:50;display:none;background:rgba(4,6,12,.95)}
+  #lb{position:fixed;inset:0;z-index:50;display:none;background:rgba(4,6,12,.96)}
   #lb.on{display:block}
   #lb .stage{
     position:absolute;inset:0;display:flex;align-items:center;justify-content:center;
     padding:5vw;
   }
   #lb img{
-    max-width:100%;max-height:84vh;border-radius:2.5vw;
+    max-width:100%;max-height:82vh;border-radius:2.5vw;
     box-shadow:0 2vw 12vw rgba(0,0,0,.85);
     animation:pop .2s ease;
     touch-action:pan-y;
   }
   @keyframes pop{from{transform:scale(.96);opacity:0}}
+
+  #lb .close{
+    position:absolute;top:4vw;right:4vw;z-index:3;
+    width:11vw;height:11vw;border-radius:50%;
+    display:flex;align-items:center;justify-content:center;
+    font-size:6.5vw;line-height:1;color:#e7efff;
+    border:1px solid rgba(180,210,255,.22);
+    background:rgba(18,26,44,.6);backdrop-filter:blur(8px);
+    cursor:pointer;
+  }
+  #lb .close:active{background:rgba(40,60,100,.75)}
+
   #lb .nav{
     position:absolute;top:50%;transform:translateY(-50%);
     width:12vw;height:12vw;border-radius:50%;
@@ -72,14 +86,14 @@
     background:rgba(18,26,44,.55);backdrop-filter:blur(8px);
     color:#dce8ff;font-size:7vw;line-height:1;
     display:flex;align-items:center;justify-content:center;
-    z-index:2;cursor:pointer;user-select:none;
+    z-index:3;cursor:pointer;user-select:none;
   }
   #lb .nav:active{background:rgba(40,60,100,.7)}
   #lb .prev{left:3vw}
   #lb .next{right:3vw}
   #lb .counter{
-    position:absolute;left:0;right:0;bottom:9vw;text-align:center;
-    font-size:3.4vw;letter-spacing:.3em;color:#9aa8c8;z-index:2;
+    position:absolute;left:0;right:0;bottom:8vw;text-align:center;
+    font-size:3.4vw;letter-spacing:.3em;color:#9aa8c8;z-index:3;
   }
   #lb .counter small{
     display:block;margin-top:1.6vw;font-size:2.6vw;letter-spacing:.24em;color:#5d6784;
@@ -108,9 +122,10 @@
 
   <div id="lb">
     <div class="stage"><img alt=""></div>
+    <span class="close">×</span>
     <span class="nav prev">‹</span>
     <span class="nav next">›</span>
-    <div class="counter"><span class="pos">1 / 5</span><small>左右滑动切换 · 点击空白关闭</small></div>
+    <div class="counter"><span class="pos">1 / 5</span><small>左右滑动切换 · 点空白关闭</small></div>
   </div>
 
 <script>
@@ -130,12 +145,14 @@
     void lbImg.offsetWidth;
     lbImg.style.animation = '';
   }
-  function close(){ lb.classList.remove('on'); }
+  function open(i){ show(i); lb.classList.add('on'); document.body.classList.add('locked'); }
+  function close(){ lb.classList.remove('on'); document.body.classList.remove('locked'); }
 
   thumbs.forEach(function(img, i){
-    img.addEventListener('click', function(){ show(i); lb.classList.add('on'); });
+    img.addEventListener('click', function(e){ e.preventDefault(); open(i); });
   });
 
+  lb.querySelector('.close').addEventListener('click', function(e){ e.stopPropagation(); close(); });
   lb.querySelector('.prev').addEventListener('click', function(e){ e.stopPropagation(); show(idx - 1); });
   lb.querySelector('.next').addEventListener('click', function(e){ e.stopPropagation(); show(idx + 1); });
 
@@ -152,7 +169,9 @@
   }, {passive:true});
 
   stage.addEventListener('touchmove', function(e){
-    if (Math.abs(e.touches[0].clientX - sx) > 8 || Math.abs(e.touches[0].clientY - sy) > 8) moved = true;
+    const dx = e.touches[0].clientX - sx;
+    const dy = e.touches[0].clientY - sy;
+    if (Math.abs(dx) > 10 || Math.abs(dy) > 10) moved = true;
   }, {passive:true});
 
   stage.addEventListener('touchend', function(e){
@@ -160,7 +179,7 @@
     const dy = e.changedTouches[0].clientY - sy;
     if (Math.abs(dx) > 45 && Math.abs(dx) > Math.abs(dy)) {
       show(idx + (dx < 0 ? 1 : -1));
-    } else if (!moved) {
+    } else if (!moved && e.target === stage) {
       close();
     }
   }, {passive:true});
