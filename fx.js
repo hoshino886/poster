@@ -50,6 +50,21 @@
     hold = null;
   }
 
+  function startBurst(){
+    if (!hold || hold.burst) return;
+    hold.burst = setInterval(function(){
+      if (!hold) return;
+      var age = (now() - hold.start) / 1000;
+      if (age > 2.6) { stopHold(); return; }
+      var reach = Math.min(14 + age * 34, 82);
+      var n = 4 + Math.floor(Math.random() * 3);
+      for (var i = 0; i < n; i++) {
+        var a = Math.random() * Math.PI * 2;
+        spark(hold.x + Math.cos(a) * 3, hold.y + Math.sin(a) * 3, reach, 2 + Math.random() * 2.4, '.72s');
+      }
+    }, 110);
+  }
+
   document.addEventListener('touchstart', function(e){
     if (!e.touches || e.touches.length !== 1) { stopHold(); return; }
     var t = e.touches[0];
@@ -61,20 +76,7 @@
       burst: null,
       kill: null
     };
-    holdTimer = setTimeout(function(){
-      if (!hold) return;
-      hold.burst = setInterval(function(){
-        if (!hold) return;
-        var age = (now() - hold.start) / 1000;
-        if (age > 2.6) { stopHold(); return; }          // 最多持续 2.6 秒
-        var reach = Math.min(14 + age * 34, 82);
-        var n = 4 + Math.floor(Math.random() * 3);
-        for (var i = 0; i < n; i++) {
-          var a = Math.random() * Math.PI * 2;
-          spark(hold.x + Math.cos(a) * 3, hold.y + Math.sin(a) * 3, reach, 2 + Math.random() * 2.4, '.72s');
-        }
-      }, 110);
-    }, 260);
+    holdTimer = setTimeout(startBurst, 260);
   }, {passive:true});
 
   document.addEventListener('touchmove', function(e){
@@ -90,12 +92,26 @@
   // 关键：QQ 等浏览器长按会先触发 touchcancel（系统接手势），
   // 这里不立刻停，让星光再持续一会儿
   document.addEventListener('touchcancel', function(){
-    if (hold && hold.burst) {
-      if (hold.kill) clearTimeout(hold.kill);
-      hold.kill = setTimeout(stopHold, 1000);
-    } else {
-      stopHold();
+    if (!hold) return;
+    // 有些浏览器（QQ/X5）在长按刚开始就 cancel，
+    // 这时定时器还没到点，直接手动启动
+    if (!hold.burst) {
+      if (holdTimer) { clearTimeout(holdTimer); holdTimer = null; }
+      startBurst();
     }
+    if (hold.kill) clearTimeout(hold.kill);
+    hold.kill = setTimeout(stopHold, 1400);
+  }, {passive:true});
+
+  // 兜底：长按若被识别成 contextmenu，也照样爆发
+  document.addEventListener('contextmenu', function(){
+    if (!hold) return;
+    if (!hold.burst) {
+      if (holdTimer) { clearTimeout(holdTimer); holdTimer = null; }
+      startBurst();
+    }
+    if (hold.kill) clearTimeout(hold.kill);
+    hold.kill = setTimeout(stopHold, 1600);
   }, {passive:true});
 
   window.addEventListener('scroll', function(){ stopHold(); }, {passive:true});
