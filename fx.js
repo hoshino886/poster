@@ -2,6 +2,11 @@
   var reduce = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
   if (reduce) return;
 
+  // QQ/X5 等旧内核没有 performance.now 时回退
+  var now = (window.performance && window.performance.now)
+    ? function(){ return performance.now(); }
+    : function(){ return Date.now(); };
+
   function spark(x, y, spread, size, dur){
     var s = document.createElement('i');
     s.className = 'fx-spark';
@@ -34,47 +39,66 @@
     for (var i = 0; i < n; i++) spark(x, y, 26, 3 + Math.random() * 2, null);
   }, {passive:true});
 
-  // ============ 长按：持续向四周散出星光，范围逐渐扩大 ============
+  // ============ 长按：从指尖向外散星光，范围渐大 ============
   var hold = null;
   var holdTimer = null;
 
   function stopHold(){
     if (holdTimer) { clearTimeout(holdTimer); holdTimer = null; }
     if (hold && hold.burst) { clearInterval(hold.burst); }
+    if (hold && hold.kill) { clearTimeout(hold.kill); }
     hold = null;
   }
 
   document.addEventListener('touchstart', function(e){
-    if (e.touches.length !== 1) { stopHold(); return; }
+    if (!e.touches || e.touches.length !== 1) { stopHold(); return; }
     var t = e.touches[0];
     stopHold();
-    hold = { x: t.clientX, y: t.clientY, start: performance.now(), burst: null };
+    hold = {
+      x: t.clientX,
+      y: t.clientY,
+      start: now(),
+      burst: null,
+      kill: null
+    };
     holdTimer = setTimeout(function(){
       if (!hold) return;
       hold.burst = setInterval(function(){
         if (!hold) return;
-        var age = (performance.now() - hold.start) / 1000;   // 秒
-        var reach = Math.min(14 + age * 34, 82);             // 飞散距离，逐渐扩大，封顶 82px
+        var age = (now() - hold.start) / 1000;
+        if (age > 2.6) { stopHold(); return; }          // 最多持续 2.6 秒
+        var reach = Math.min(14 + age * 34, 82);
         var n = 4 + Math.floor(Math.random() * 3);
         for (var i = 0; i < n; i++) {
           var a = Math.random() * Math.PI * 2;
           spark(hold.x + Math.cos(a) * 3, hold.y + Math.sin(a) * 3, reach, 2 + Math.random() * 2.4, '.72s');
         }
       }, 110);
-    }, 330);
+    }, 260);
   }, {passive:true});
 
   document.addEventListener('touchmove', function(e){
-    if (!hold || e.touches.length !== 1) return;
+    if (!hold || !e.touches || e.touches.length !== 1) return;
     var t = e.touches[0];
     var dx = t.clientX - hold.x;
     var dy = t.clientY - hold.y;
-    if (dx * dx + dy * dy > 196) stopHold();  // 移动超过 14px 就取消长按
+    if (dx * dx + dy * dy > 196) stopHold();   // 移动超过 14px 取消
   }, {passive:true});
 
   document.addEventListener('touchend', stopHold, {passive:true});
-  document.addEventListener('touchcancel', stopHold, {passive:true});
-  window.addEventListener('scroll', stopHold, {passive:true});
+
+  // 关键：QQ 等浏览器长按会先触发 touchcancel（系统接手势），
+  // 这里不立刻停，让星光再持续一会儿
+  document.addEventListener('touchcancel', function(){
+    if (hold && hold.burst) {
+      if (hold.kill) clearTimeout(hold.kill);
+      hold.kill = setTimeout(stopHold, 1000);
+    } else {
+      stopHold();
+    }
+  }, {passive:true});
+
+  window.addEventListener('scroll', function(){ stopHold(); }, {passive:true});
 
   // ============ 滑动光带（实时单曲线） ============
   var canvas = document.createElement('canvas');
@@ -105,10 +129,10 @@
 
   function tick(){
     ctx.clearRect(0, 0, W, H);
-    var now = performance.now();
+    var t0 = now();
 
     while (pts.length > MAXPTS) pts.shift();
-    while (pts.length && now - pts[0].t > LIFE) pts.shift();
+    while (pts.length && t0 - pts[0].t > LIFE) pts.shift();
 
     if (pts.length >= 2) {
       var first = pts[0];
@@ -123,9 +147,6 @@
       }
       ctx.lineTo(last.x, last.y);
 
-      var gx = last.x - first.x;
-      var gy = last.y - first.y;
-      if (Math.abs(gx) + Math.abs(gy) < 1) { gx = 0.01; gy = 0.01; }
       var grad = ctx.createLinearGradient(first.x, first.y, last.x, last.y);
       grad.addColorStop(0, 'rgba(255,255,255,0)');
       grad.addColorStop(0.5, 'rgba(255,255,255,0.38)');
@@ -152,9 +173,9 @@
   }
 
   document.addEventListener('touchmove', function(e){
-    if (e.touches.length !== 1) return;
+    if (!e.touches || e.touches.length !== 1) return;
     var t = e.touches[0];
-    var now = performance.now();
+    var t0 = now();
     var last = pts[pts.length - 1];
 
     if (last) {
@@ -166,12 +187,12 @@
         var steps = Math.min(6, Math.floor(d / 8));
         for (var k = 1; k <= steps; k++) {
           var f = k / (steps + 1);
-          pts.push({x: last.x + dx * f, y: last.y + dy * f, t: now});
+          pts.push({x: last.x + dx * f, y: last.y + dy * f, t: t0});
         }
       }
     }
 
-    pts.push({x: t.clientX, y: t.clientY, t: now});
+    pts.push({x: t.clientX, y: t.clientY, t: t0});
     if (!running) { running = true; requestAnimationFrame(tick); }
   }, {passive:true});
 
