@@ -16,7 +16,7 @@
     s.style.setProperty('--dy', (Math.sin(a) * d).toFixed(1) + 'px');
     if (dur) s.style.animationDuration = dur;
     document.body.appendChild(s);
-    setTimeout(function(){ if (s.parentNode) s.parentNode.removeChild(s); }, 700);
+    setTimeout(function(){ if (s.parentNode) s.parentNode.removeChild(s); }, 760);
   }
 
   // 点击：星芒 + 飞散星点
@@ -34,7 +34,50 @@
     for (var i = 0; i < n; i++) spark(x, y, 26, 3 + Math.random() * 2, null);
   }, {passive:true});
 
-  // ============ 滑动光带（实时、单条曲线） ============
+  // ============ 长按：持续向四周散出星光，范围逐渐扩大 ============
+  var hold = null;
+  var holdTimer = null;
+
+  function stopHold(){
+    if (holdTimer) { clearTimeout(holdTimer); holdTimer = null; }
+    if (hold && hold.burst) { clearInterval(hold.burst); }
+    hold = null;
+  }
+
+  document.addEventListener('touchstart', function(e){
+    if (e.touches.length !== 1) { stopHold(); return; }
+    var t = e.touches[0];
+    stopHold();
+    hold = { x: t.clientX, y: t.clientY, start: performance.now(), burst: null };
+    holdTimer = setTimeout(function(){
+      if (!hold) return;
+      hold.burst = setInterval(function(){
+        if (!hold) return;
+        var age = (performance.now() - hold.start) / 1000;   // 秒
+        var radius = Math.min(38 + age * 64, 180);            // 逐渐扩大，封顶 180px
+        var n = 4 + Math.floor(Math.random() * 3);
+        for (var i = 0; i < n; i++) {
+          var a = Math.random() * Math.PI * 2;
+          var r = radius * (0.55 + Math.random() * 0.55);
+          spark(hold.x + Math.cos(a) * r, hold.y + Math.sin(a) * r, 18, 2 + Math.random() * 3, '.72s');
+        }
+      }, 110);
+    }, 330);
+  }, {passive:true});
+
+  document.addEventListener('touchmove', function(e){
+    if (!hold || e.touches.length !== 1) return;
+    var t = e.touches[0];
+    var dx = t.clientX - hold.x;
+    var dy = t.clientY - hold.y;
+    if (dx * dx + dy * dy > 196) stopHold();  // 移动超过 14px 就取消长按
+  }, {passive:true});
+
+  document.addEventListener('touchend', stopHold, {passive:true});
+  document.addEventListener('touchcancel', stopHold, {passive:true});
+  window.addEventListener('scroll', stopHold, {passive:true});
+
+  // ============ 滑动光带（实时单曲线） ============
   var canvas = document.createElement('canvas');
   canvas.className = 'fx-canvas';
   document.body.appendChild(canvas);
@@ -56,8 +99,8 @@
   window.addEventListener('resize', resize);
   window.addEventListener('orientationchange', function(){ setTimeout(resize, 120); });
 
-  var MAXPTS = 26;      // 只留最近一小段，实时跟手
-  var LIFE = 300;       // 毫秒
+  var MAXPTS = 26;
+  var LIFE = 300;
   var pts = [];
   var running = false;
 
@@ -65,7 +108,6 @@
     ctx.clearRect(0, 0, W, H);
     var now = performance.now();
 
-    // 只保留最近的点和最近的时间窗
     while (pts.length > MAXPTS) pts.shift();
     while (pts.length && now - pts[0].t > LIFE) pts.shift();
 
@@ -73,7 +115,6 @@
       var first = pts[0];
       var last = pts[pts.length - 1];
 
-      // 单条平滑曲线
       ctx.beginPath();
       ctx.moveTo(first.x, first.y);
       for (var i = 1; i < pts.length - 1; i++) {
@@ -83,7 +124,6 @@
       }
       ctx.lineTo(last.x, last.y);
 
-      // 沿首尾方向做渐变：尾透明、头纯白
       var gx = last.x - first.x;
       var gy = last.y - first.y;
       if (Math.abs(gx) + Math.abs(gy) < 1) { gx = 0.01; gy = 0.01; }
@@ -100,7 +140,6 @@
       ctx.shadowBlur = 13;
       ctx.stroke();
 
-      // 再描一遍细芯，更亮
       ctx.shadowBlur = 0;
       ctx.globalAlpha = 0.85;
       ctx.lineWidth = 1;
@@ -112,8 +151,6 @@
     if (pts.length) requestAnimationFrame(tick);
     else running = false;
   }
-
-  document.addEventListener('touchstart', function(){ pts = []; }, {passive:true});
 
   document.addEventListener('touchmove', function(e){
     if (e.touches.length !== 1) return;
@@ -139,8 +176,6 @@
     if (!running) { running = true; requestAnimationFrame(tick); }
   }, {passive:true});
 
-  // 页面滚动时清掉，避免线停在旧位置显得偏移
   window.addEventListener('scroll', function(){ pts = []; }, {passive:true});
   document.addEventListener('touchcancel', function(){ pts = []; }, {passive:true});
-  document.addEventListener('touchend', function(){}, {passive:true});
 })();
