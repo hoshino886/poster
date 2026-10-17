@@ -19,7 +19,21 @@
     setTimeout(function(){ if (s.parentNode) s.parentNode.removeChild(s); }, 700);
   }
 
-  // 点击：一颗中心星芒 + 几颗飞散的小星点
+  function line(x1, y1, x2, y2){
+    var dx = x2 - x1, dy = y2 - y1;
+    var len = Math.sqrt(dx * dx + dy * dy);
+    if (len < 1.5) return;
+    var d = document.createElement('i');
+    d.className = 'fx-line';
+    d.style.left = x1 + 'px';
+    d.style.top = y1 + 'px';
+    d.style.width = len + 'px';
+    d.style.transform = 'rotate(' + Math.atan2(dy, dx) + 'rad)';
+    document.body.appendChild(d);
+    setTimeout(function(){ if (d.parentNode) d.parentNode.removeChild(d); }, 500);
+  }
+
+  // 点击：星芒 + 飞散星点
   document.addEventListener('pointerdown', function(e){
     var x = e.clientX, y = e.clientY;
 
@@ -31,22 +45,32 @@
     setTimeout(function(){ if (star.parentNode) star.parentNode.removeChild(star); }, 620);
 
     var n = 4 + Math.floor(Math.random() * 3);
-    for (var i = 0; i < n; i++) {
-      spark(x, y, 26, 3 + Math.random() * 2, null);
+    for (var i = 0; i < n; i++) spark(x, y, 26, 3 + Math.random() * 2, null);
+  }, {passive:true});
+
+  // 滑动：白色光带 + 星点
+  var prev = null, lastSpark = 0, lastLine = 0;
+
+  document.addEventListener('touchstart', function(){ prev = null; }, {passive:true});
+
+  document.addEventListener('touchmove', function(e){
+    if (e.touches.length !== 1) { prev = null; return; }
+    var t = e.touches[0];
+    var x = t.clientX, y = t.clientY;
+    var now = Date.now();
+
+    if (prev && now - lastLine > 22) {
+      lastLine = now;
+      line(prev.x, prev.y, x, y);
+    }
+    prev = {x: x, y: y};
+
+    if (now - lastSpark > 60) {
+      lastSpark = now;
+      spark(x + (Math.random() * 12 - 6), y + (Math.random() * 12 - 6), 10, 2.5 + Math.random() * 2.5, '.5s');
     }
   }, {passive:true});
 
-  // 滑动：细碎的星点拖尾
-  var last = 0;
-  document.addEventListener('touchmove', function(e){
-    if (e.touches.length !== 1) return;
-    var t = e.touches[0];
-    var now = Date.now();
-    if (now - last < 46) return;
-    last = now;
-
-    var x = t.clientX + (Math.random() * 12 - 6);
-    var y = t.clientY + (Math.random() * 12 - 6);
-    spark(x, y, 10, 2.5 + Math.random() * 2.5, '.5s');
-  }, {passive:true});
+  document.addEventListener('touchend', function(){ prev = null; }, {passive:true});
+  document.addEventListener('touchcancel', function(){ prev = null; }, {passive:true});
 })();
