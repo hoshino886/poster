@@ -1,12 +1,7 @@
 /* 彻底禁用移动端点击高亮 */
 *{ -webkit-tap-highlight-color: transparent !important; }
 
-/* 关掉移动端默认的点击高亮方块 */
-html, body, a, button, figure, img, span, div{
-  -webkit-tap-highlight-color: transparent;
-}
-
-/* 点击星芒 & 滑动星点 */
+/* 点击星芒 */
 .fx-star{
   position:fixed;z-index:9999;
   width:7px;height:7px;margin:-3.5px 0 0 -3.5px;
@@ -22,6 +17,7 @@ html, body, a, button, figure, img, span, div{
   100%{transform:scale(.15);opacity:0}
 }
 
+/* 滑动星点 */
 .fx-spark{
   position:fixed;z-index:9998;
   width:4px;height:4px;margin:-2px 0 0 -2px;
@@ -34,4 +30,20 @@ html, body, a, button, figure, img, span, div{
   0%{transform:translate(0,0) scale(.6);opacity:0}
   15%{transform:translate(calc(var(--dx) * .15), calc(var(--dy) * .15)) scale(1);opacity:1}
   100%{transform:translate(var(--dx), var(--dy)) scale(.15);opacity:0}
+}
+
+/* 滑动白色光带 */
+.fx-line{
+  position:fixed;z-index:9997;pointer-events:none;
+  height:2.5px;margin-top:-1.25px;
+  border-radius:3px;
+  background:linear-gradient(90deg, rgba(255,255,255,.05), rgba(255,255,255,.72) 55%, #ffffff);
+  box-shadow:0 0 6px 1.5px rgba(215,242,255,.9), 0 0 18px 6px rgba(150,210,255,.42);
+  transform-origin:0 50%;
+  animation:fxLine .46s ease-out forwards;
+}
+@keyframes fxLine{
+  0%{opacity:.98}
+  60%{opacity:.55}
+  100%{opacity:0}
 }
